@@ -226,7 +226,25 @@ def main(lf, run_parallel=False, run_bat=True, **kwargs):
         # Run subprocess.
         if run_bat:
             t0 = dt.datetime.now()
-            process = sb.run(CalSim, cwd=work_dir)
+            p_args = r'jre\bin\java -Djava.library.path="lib" -cp "dropins\wrimsv2_plugin_1.0.0.0.jar;lib\xml.jar;lib\xmlbeans-2.3.0.jar;lib\hec.jar;lib\hecData.jar;lib\heclib.jar;lib\rma.jar;batchrun\org.eclipse.core.runtime-3.1.0.jar;plugins\org.apache.commons.io_2.0.1.v201105210651.jar;plugins\org.eclipse.debug.core_3.9.1.v20140805-1629.jar;plugins\org.eclipse.osgi_3.10.2.v20150203-1939.jar;plugins\org.eclipse.equinox.common_3.6.200.v20130402-1505.jar;plugins\org.eclipse.core.resources_3.9.1.v20140825-1431.jar;plugins\org.eclipse.ui.workbench_3.106.2.v20150204-1030.jar;plugins\org.eclipse.swt.win32.win32.x86_64_3.103.2.v20150203-1351.jar;plugins\org.eclipse.jface_3.10.2.v20141021-1035.jar" wrimsv2_plugin.batchrun.BatchRunCmd batchrun\LaunchFileGroup.lfg'.split()
+            p_args[0] = os.path.join(WRIMS, p_args[0])
+            p_args[3] = p_args[3].strip('"')
+            # NOTES:
+            #   1. If subprocess has additional arguments to pass, then
+            #      `p_args` must be a list (safe) or sb.run must have 
+            #       shell=True (not safe).
+            #   2. How do I have the subprocess output in the same Python
+            #      window? I recall doing this with HEC5Q; something related to
+            #      creationflags=sb.CREATE_NEW_CONSOLE. It is just nice to
+            #      know. In reality, it would be better to open a separate
+            #      window to control workflow. Perhaps it can be an option for
+            #      the end user to specify.
+            #   3. Even when this code is updated, Hao still needs to return
+            #      error codes when WRIMS is interrupted.
+            #   4. If I do not strip p_args[3] of the quotations, the
+            #      subprocess does return a code of "1".
+            process = sb.run(p_args, cwd=WRIMS, capture_output=True)
+            print('Return Code', process.returncode, sep=': ')
             t1 = dt.datetime.now()
             if process.returncode != 0:
                 print('CalSim Subprocess Failed.')
